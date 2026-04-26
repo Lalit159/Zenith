@@ -1,6 +1,7 @@
 # Creating Zenith - Real-time order matching engine
 
 import time
+import heapq
 
 class Order:
     def __init__(self, order_id, side, price, quantity):
@@ -19,16 +20,15 @@ class Order:
 
 class OrderBook:
     def __init__(self):
-        self.buys = [] # List of buy orders
-        self.asks = [] # List of sell orders
+        self.buys = [] # Min heap(negative price for max-heap behavior)
+        self.asks = [] # Min heap (standard)
 
     def add_order(self, order):
         if order.side == 'buy':
-            self.buys.append(order)
-            self.buys.sort(key = lambda x: x.price, reverse=True) # Sort buy orders by price descending
+            # Storing -100 makes it "smaller" than -90, so it stays at the top.
+            heapq.heappush(self.buys, (-order.price, order.timestamp, order))
         else:
-            self.asks.append(order)
-            self.asks.sort(key = lambda x: x.price) # Sort sell orders by price ascending
+            heapq.heappush(self.asks, (order.price, order.timestamp, order))
 
         self.match() # After adding, try to match orders
 
