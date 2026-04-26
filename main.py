@@ -10,6 +10,7 @@ class Order:
         self.price = price
         self.quantity = quantity
         self.timestamp = time.time()
+        self.is_cancelled = False  # To handle order cancellations in the future
 
     def __repr__(self): # For debugging purposes for developers
         return f"Order(id={self.order_id}, side={self.side.upper()}, price={self.price}, quantity={self.quantity})"
@@ -20,24 +21,55 @@ class Order:
 
 class OrderBook:
     def __init__(self):
-        self.buys = [] # Min heap(negative price for max-heap behavior)
+        self.bids = [] # Min heap(negative price for max-heap behavior)
         self.asks = [] # Min heap (standard)
+        self.orders_map = {} # To keep track of orders by ID for potential cancellations
 
     def add_order(self, order):
+        self.orders_map[order.order_id] = order # Store order in map for easy access
+
         if order.side == 'buy':
             # Storing -100 makes it "smaller" than -90, so it stays at the top.
-            heapq.heappush(self.buys, (-order.price, order.timestamp, order))
+            heapq.heappush(self.bids, (-order.price, order.timestamp, order))
         else:
             heapq.heappush(self.asks, (order.price, order.timestamp, order))
 
         self.match() # After adding, try to match orders
 
-    def match(self):
-        while self.buys and self.asks:
-            best_bid = self.buys[0]
-            best_ask = self.asks[0]
+    def cancel_order(self, order_id):
+        if order_id in self.orders_map:
+            order = self.orders_map[order_id]
+            order.is_cancelled = True
+            print(f"Order {order_id} cancelled.")
+        else:
+            print(f"Order {order_id} not found for cancellation.")
 
-            if best_bid.price >= best_ask.price: # If there's a match
+    def _remove_order(self, heap, order_id):
+        if heap == self.bids:
+            heapq.heappop(self.bids)
+        else:
+            heapq.heappop(self.asks)
+        self.orders_map.pop(order_id, None)
+
+    def match(self):
+        while self.bids and self.asks:
+            # peek at the top of both heaps
+            best_bid_neg_price, bid_time, best_bid = self.bids[0]
+            best_ask_price, ask_time, best_ask = self.asks[0]
+
+            if best_bid.is_cancelled:
+                self._remove_order(self.bids, best_bid.order_id)
+                continue
+
+            if best_ask.is_cancelled:
+                self._remove_order(self.asks, best_ask.order_id)
+                continue
+
+            # Convert back to positive for the comparison
+            best_bid_price = -best_bid_neg_price
+
+
+            if best_bid_price >= best_ask_price: # If there's a match
                 trade_price = best_ask.price
                 trade_quantity = min(best_bid.quantity, best_ask.quantity)
 
@@ -47,9 +79,10 @@ class OrderBook:
                 best_ask.quantity -= trade_quantity
 
                 if best_bid.quantity == 0:
-                    self.buys.pop(0) # Remove fully filled buy order
+                    self._remove_order(self.bids, best_bid.order_id)
+
                 if best_ask.quantity == 0:
-                    self.asks.pop(0) # Remove fully filled sell order
+                    self._remove_order(self.asks, best_ask.order_id)
 
             else:
                 print("No match found, stopping matching process.")
@@ -72,6 +105,10 @@ def main():
     for order in orders:
         print(f"Adding {order}")
         order_book.add_order(order)
+
+    # Sample cancellation
+    order_book.cancel_order(3)
+    order_book.cancel_order(6)
 
 if __name__ == "__main__":
     main()
