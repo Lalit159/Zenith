@@ -3,6 +3,11 @@
 import time
 import heapq
 
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List
+
 class Order:
     def __init__(self, order_id, side, price, quantity):
         self.order_id = order_id
@@ -89,6 +94,42 @@ class OrderBook:
                 break # No more matches possible
 
 
+class OrderRequest(BaseModel):
+    order_id: int
+    side: str
+    price: float
+    quantity: int
+
+app = FastAPI()
+order_book = OrderBook()
+
+@app.post("/orders")
+def create_order(order_request: OrderRequest):
+    order_id = order_request.order_id
+    if order_id in order_book.orders_map:
+        raise HTTPException(status_code=400, detail="Order ID already exists.")
+
+    order = Order(order_id, order_request.side, order_request.price, order_request.quantity)
+    order_book.add_order(order)
+    return {"message": "Order added successfully."}
+
+
+@app.delete("/orders/{order_id}")
+def cancel_order(order_id: int):
+    if order_id not in order_book.orders_map:
+        raise HTTPException(status_code=404, detail="Order ID not found.")
+
+    order_book.cancel_order(order_id)
+    return {"message": "Order cancelled successfully."}
+
+@app.get("/book")
+def get_order_book():
+    return {
+        "bids": [str(o[2]) for o in order_book.bids if not o[2].is_cancelled],
+        "asks": [str(o[2]) for o in order_book.asks if not o[2].is_cancelled]
+    }
+
+
 def main():
     order_book = OrderBook()
 
@@ -110,6 +151,8 @@ def main():
     order_book.cancel_order(3)
     order_book.cancel_order(6)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
+
+
 
