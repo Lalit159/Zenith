@@ -53,7 +53,15 @@ The engine maintains two Priority Queues:
 
 ### Running the Server
 
-uvicorn main:app --reload
+1. Activate the virtual environment:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+2. Start the server:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
 The API will be available at:
 [http://127.0.0.1:8000](http://127.0.0.1:8000)
