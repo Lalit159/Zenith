@@ -35,11 +35,21 @@ The engine maintains two Priority Queues:
 ### Installation
 
 1. Clone the repository:
-   git clone [https://github.com/yourusername/zenith.git](https://github.com/yourusername/zenith.git)
+   ```bash
+   git clone https://github.com/Lalit159/Zenith.git
    cd zenith
+   ```
 
-2. Install dependencies:
-   pip install fastapi uvicorn
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ### Running the Server
 
