@@ -1,3 +1,4 @@
+import asyncio
 import heapq
 from models import Order
 
@@ -7,24 +8,27 @@ class OrderBook:
         self.bids = []  # Max heap (negative price)
         self.asks = []  # Min heap
         self.orders_map = {}  # Track orders by ID
+        self.lock = asyncio.Lock()  # The Lock acts as the guard for the entire OrderBook state
 
-    def add_order(self, order: Order):
-        self.orders_map[order.order_id] = order
+    async def add_order(self, order: Order):
+        async with self.lock:
+            self.orders_map[order.order_id] = order
 
-        if order.side == 'buy':
-            heapq.heappush(self.bids, (-order.price, order.timestamp, order))
-        else:
-            heapq.heappush(self.asks, (order.price, order.timestamp, order))
+            if order.side == 'buy':
+                heapq.heappush(self.bids, (-order.price, order.timestamp, order))
+            else:
+                heapq.heappush(self.asks, (order.price, order.timestamp, order))
 
-        self.match()
+            self.match()
 
-    def cancel_order(self, order_id: int):
-        if order_id in self.orders_map:
-            order = self.orders_map[order_id]
-            order.is_cancelled = True
-            print(f"Order {order_id} cancelled.")
-        else:
-            print(f"Order {order_id} not found for cancellation.")
+    async def cancel_order(self, order_id: int):
+        async with self.lock:
+            if order_id in self.orders_map:
+                order = self.orders_map[order_id]
+                order.is_cancelled = True
+                print(f"Order {order_id} cancelled.")
+            else:
+                print(f"Order {order_id} not found for cancellation.")
 
     def _remove_order(self, heap, order_id: int):
         heapq.heappop(heap)

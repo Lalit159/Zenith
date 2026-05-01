@@ -16,8 +16,11 @@
 **Solution:** I integrated a housekeeping step within the `match()` function.
 - **Mechanism:** Before every match, the engine checks the top of both heaps. If the top order is marked as cancelled, it is "popped" and removed from the map. This ensures that the memory footprint stays proportional to the number of *active* orders rather than the total history of orders.
 
-### 4. Future Roadmap: Thread Safety & Persistence
-**Current Limitation:** The current version is in-memory and not thread-safe for high-concurrency writes.
-**Next Steps:**
-- **Concurrency:** I plan to implement a **Read-Write Lock** or use a **Single-Threaded Event Loop** (similar to Node.js or Redis) to ensure the order book remains consistent when multiple users trade simultaneously.
-- **Persistence:** To handle system crashes, I intend to implement a **Write-Ahead Log (WAL)** to record every order to disk before it's processed, allowing for full state recovery.
+### 4. Challenge: Concurrency & Race Conditions
+**Problem:** Multiple users placing/cancelling orders simultaneously can cause race conditions (e.g., double-processing, inconsistent state).
+**Current Solution:** Implemented **`asyncio.Lock()`** - a single mutual exclusion lock protecting the entire OrderBook state.
+- **Mechanism:** All operations (`add_order`, `cancel_order`, `get_order_book`) acquire the lock before accessing shared state (bids, asks, orders_map).
+- **Trade-off:** Simple and safe (prevents all race conditions), but a potential bottleneck at extreme scale (thousands of concurrent users). Single lock serializes all operations.
+- **Validation:** Stress-tested with 1000 concurrent orders via `test_concurrent_orders.py` - all requests succeeded with no data corruption.
+
+
