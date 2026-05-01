@@ -34,7 +34,25 @@
   - **Rotating files:** Prevents disk space issues by automatically archiving old logs
 - **Performance:** Asynchronous file I/O ensures <1% CPU overhead even with 1000 concurrent orders.
 
-### 6. Challenge: Why Not Use a Traditional Database?
+### 6. Challenge: Data Persistence & Crash Recovery
+**Problem:** In a trading system, losing order data due to a crash is catastrophic. Traders lose their orders, execution history is lost, and the system enters an inconsistent state. How do we guarantee durability without sacrificing performance?
+**Solution:** I implemented **Write-Ahead Logging (WAL)** using a journal file (`journal.log`).
+- **Mechanism:**
+  1. **Before** any order is added to the in-memory OrderBook, it is first written to `journal.log` as a JSON entry.
+  2. **Before** any order is cancelled, the cancellation event is logged to disk.
+  3. On **startup**, the `load_from_log()` function replays the journal, reconstructing the exact OrderBook state.
+- **Implementation Details:**
+  - Each log entry includes action type (ADD/CANCEL), order details, and timestamp
+  - Entries are appended sequentially (O(1) write per order)
+  - Idempotent recovery: duplicate order IDs in the log are skipped to prevent re-adding orders
+  - The journal can grow large over time (addressed in Log Rotation challenge)
+- **Trade-off:** Small synchronous I/O overhead (~1-5ms per order), but guarantees durability. Every byte written to disk is "safe" before the order enters the in-memory system.
+- **Benefits:**
+  - **Zero Data Loss:** Even if the process crashes mid-operation, the journal can reconstruct state
+  - **Compliance:** Complete audit trail of all trading activity for regulatory requirements
+  - **Debugging:** Replay the journal to understand exactly what happened during an outage
+
+### 7. Challenge: Why Not Use a Traditional Database?
 **Problem:** A typical trading system might use PostgreSQL, MongoDB, or similar databases. Why avoid them here?
 **Reasoning:**
 1. **Latency is Critical:** In high-frequency trading, every microsecond matters. Database queries (network round-trip, disk I/O, query planning) add 10-100ms of latency per operation. Our in-memory heap-based approach achieves sub-millisecond order matching.

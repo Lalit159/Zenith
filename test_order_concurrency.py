@@ -12,7 +12,7 @@ from config import (
     STRESS_TEST_NUM_ORDERS
 )
 
-logger = setup_logger(__name__)
+logger = setup_logger("test_order_concurrency")
 
 async def send_order(client, order_id):
     """

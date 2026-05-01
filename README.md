@@ -10,6 +10,7 @@ Zenith is a lightweight, high-performance order matching engine built in Python.
 * **Fast Cancellations:** Implements a "Lazy Removal" strategy for O(1) order cancellations.
 * **RESTful API:** Wrapped in FastAPI for high-concurrency and easy integration.
 * **Memory Efficient:** Automatic cleanup of "zombie" (cancelled) orders to prevent memory leaks.
+* **Persistence & Recovery:** Write-Ahead Logging (WAL) ensures no order data is lost on crashes; automatic state recovery on startup.
 
 ## 🏗️ Architecture
 
