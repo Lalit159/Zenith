@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from models import Order, OrderRequest
 from order_book import OrderBook
 from logger import setup_logger
+from config import SERVER_HOST, SERVER_PORT, get_config_summary
 
 logger = setup_logger(__name__)
 
@@ -68,6 +69,12 @@ async def get_order_book():
 if __name__ == "__main__":
     import uvicorn
     logger.info("🚀 Starting Zenith Order Matching Engine...")
-    logger.info("📍 Server running at http://127.0.0.1:8000")
-    logger.info("📚 API documentation at http://127.0.0.1:8000/docs")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    
+    # Log configuration summary
+    config_summary = get_config_summary()
+    for key, value in config_summary.items():
+        logger.info(f"   {key}: {value}")
+    
+    logger.info(f"📍 Server running at http://{SERVER_HOST}:{SERVER_PORT}")
+    logger.info(f"📚 API documentation at http://{SERVER_HOST}:{SERVER_PORT}/docs")
+    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

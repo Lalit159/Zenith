@@ -1,6 +1,6 @@
 """
 Concurrent stress test for OrderBook lock mechanism.
-Tests thread safety by firing 1000 simultaneous order requests.
+Tests thread safety by firing concurrent order requests.
 """
 
 import asyncio
@@ -8,6 +8,9 @@ import httpx
 import time
 import logging
 from logger import setup_logger
+from config import (
+    STRESS_TEST_NUM_ORDERS
+)
 
 logger = setup_logger(__name__)
 
@@ -24,7 +27,7 @@ async def send_order(client, order_id):
         "quantity": 1
     }
     try:
-        response = await client.post("http://127.0.0.1:8000/orders", json=order_data, timeout=45.0)
+        response = await client.post("http://127.0.0.1:8000/orders", json=order_data, timeout=30.0)
         logger.debug(f"Order {order_id}: Status {response.status_code}")
         return response.status_code
     except Exception as e:
@@ -33,12 +36,12 @@ async def send_order(client, order_id):
 
 async def main():
     """
-    Main concurrent test: Launch 1000 orders simultaneously.
+    Main concurrent test: Launch orders simultaneously.
     Measures throughput and validates lock prevents data corruption.
     """
-    num_orders = 1000
+    num_orders = STRESS_TEST_NUM_ORDERS
     async with httpx.AsyncClient() as client:
-        # Create 1000 coroutines (not executed yet)
+        # Create coroutines (not executed yet)
         tasks = [send_order(client, i) for i in range(num_orders)]
 
         logger.info(f"🔥 Starting stress test: Blasting {num_orders} orders at once...")
