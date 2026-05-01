@@ -71,9 +71,9 @@ Interactive documentation (Swagger UI):
 
 ## 📈 API Endpoints
 
-| Method | Endpoint    | Description                      |
-| ------ | ----------- | -------------------------------- |
-| POST   | /order      | Place a new Buy or Sell order    |
-| DELETE | /order/{id} | Cancel an existing order by ID   |
-| GET    | /book       | View the current live Order Book |
+| Method | Endpoint        | Description                      |
+| ------ | --------------- | -------------------------------- |
+| POST   | /orders         | Place a new Buy or Sell order    |
+| DELETE | /orders/{id}    | Cancel an existing order by ID   |
+| GET    | /book           | View the current live Order Book |
 
