@@ -1,11 +1,15 @@
 """
 Concurrent stress test for OrderBook lock mechanism.
-Tests thread safety by firing 100 simultaneous order requests.
+Tests thread safety by firing 1000 simultaneous order requests.
 """
 
 import asyncio
 import httpx
 import time
+import logging
+from logger import setup_logger
+
+logger = setup_logger(__name__)
 
 async def send_order(client, order_id):
     """
@@ -20,10 +24,11 @@ async def send_order(client, order_id):
         "quantity": 1
     }
     try:
-        response = await client.post("http://127.0.0.1:8000/orders", json=order_data, timeout=30.0) #Change to 13.0 and see how many orders complete before timeout
+        response = await client.post("http://127.0.0.1:8000/orders", json=order_data, timeout=45.0)
+        logger.debug(f"Order {order_id}: Status {response.status_code}")
         return response.status_code
     except Exception as e:
-        print(f"❌ Order {order_id} failed: {type(e).__name__}: {e}")
+        logger.error(f"❌ Order {order_id} failed: {type(e).__name__}: {e}")
         return str(e)
 
 async def main():
@@ -36,7 +41,7 @@ async def main():
         # Create 1000 coroutines (not executed yet)
         tasks = [send_order(client, i) for i in range(num_orders)]
 
-        print(f"Blasting {num_orders} orders at once...")
+        logger.info(f"🔥 Starting stress test: Blasting {num_orders} orders at once...")
         start_time = time.time()
         # Execute all tasks concurrently (locks serialize access to OrderBook)
         results = await asyncio.gather(*tasks)
@@ -45,9 +50,12 @@ async def main():
         # Report results
         successes = results.count(200)
         failures = len(results) - successes
-        print(f"\n✅ Finished in {end_time - start_time:.4f} seconds")
-        print(f"✅ Successes: {successes}/{num_orders}")
-        print(f"❌ Failures: {failures}/{num_orders}")
+        elapsed_time = end_time - start_time
+
+        logger.info(f"📊 Stress test completed!")
+        logger.info(f"✅ Successes: {successes}/{num_orders}")
+        logger.info(f"❌ Failures: {failures}/{num_orders}")
+        logger.info(f"⏱️  Time elapsed: {elapsed_time:.4f} seconds")
 
 if __name__ == "__main__":
     asyncio.run(main())
