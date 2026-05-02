@@ -16,7 +16,7 @@ class OrderBook:
         self.asks = []  # Min heap
         self.orders_map = {}  # Track orders by ID
         self.lock = asyncio.Lock()  # The Lock acts as the guard for the entire OrderBook state
-        self.log_file = "journal.log" # Log file for write-ahead logging (WAL)
+        self.log_file = "data/journal.log" # Log file for write-ahead logging (WAL)
 
     async def add_order(self, order: Order):
         async with self.lock:

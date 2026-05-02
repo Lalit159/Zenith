@@ -1,5 +1,16 @@
 ## 📋 Logging Implementation
 
+### Recent Changes
+
+- **Log Rotation**: Application logs use rotating file handlers (10MB, 5 backups) to prevent disk overuse.
+- **Log Locations**:
+	- Application logs: `logs/<module>.log`
+	- Write-Ahead Log (WAL): `data/journal.log`
+
+### WAL (Write-Ahead Logging)
+
+Order and cancel events are persisted to `data/journal.log` for recovery. This file is ignored by git and Docker builds.
+
 Zenith now includes comprehensive logging throughout the entire codebase for debugging, monitoring, and auditing.
 
 ### 🏗️ Architecture

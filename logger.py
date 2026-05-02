@@ -25,6 +25,15 @@ def setup_logger(name: str, level=logging.DEBUG) -> logging.Logger:
 
     Returns:
         Configured logger instance
+
+    Log Level Hierarchy (from least to most severe):
+        DEBUG (10) → INFO (20) → WARNING (30) → ERROR (40) → CRITICAL (50)
+
+    Handler Configuration:
+        - Console Handler: INFO level (shows INFO, WARNING, ERROR, CRITICAL)
+          User-facing output, excludes low-level DEBUG details
+        - File Handler: DEBUG level (shows DEBUG, INFO, WARNING, ERROR, CRITICAL)
+          Developer-focused detailed logs for debugging and auditing
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -33,13 +42,16 @@ def setup_logger(name: str, level=logging.DEBUG) -> logging.Logger:
     if logger.handlers:
         return logger
 
-    # Console handler (INFO level)
+    # Console handler (INFO level and above)
+    # Shows: INFO, WARNING, ERROR, CRITICAL (but NOT DEBUG)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_formatter = logging.Formatter(LOG_FORMAT, DATE_FORMAT)
     console_handler.setFormatter(console_formatter)
 
-    # File handler (DEBUG level - more detailed)
+    # File handler (DEBUG level and above - all levels)
+    # Shows: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    # Rotating: 10MB per file, keeps 5 backups (prevents disk space issues)
     file_handler = RotatingFileHandler(
         LOG_DIR / f"{name}.log",
         maxBytes=10 * 1024 * 1024,  # 10MB

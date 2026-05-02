@@ -54,11 +54,13 @@ async def main():
         successes = results.count(200)
         failures = len(results) - successes
         elapsed_time = end_time - start_time
+        throughput = successes / elapsed_time if elapsed_time > 0 else 0
 
         logger.info(f"📊 Stress test completed!")
         logger.info(f"✅ Successes: {successes}/{num_orders}")
         logger.info(f"❌ Failures: {failures}/{num_orders}")
         logger.info(f"⏱️  Time elapsed: {elapsed_time:.4f} seconds")
+        logger.info(f"🚀 Throughput: {throughput:.2f} Orders/Second")
 
 if __name__ == "__main__":
     asyncio.run(main())

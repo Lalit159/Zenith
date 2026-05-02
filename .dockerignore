@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+.git
+.env
+journal.log
+*.log
+/logs
