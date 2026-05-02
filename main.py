@@ -73,6 +73,9 @@ async def create_order(order_request: OrderRequest):
         logger.error(f"Invalid order data: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Invalid order data: {str(e)}")
 
+    except HTTPException:
+        raise  # Re-raise HTTPException without modification
+
     except Exception as e:
         logger.error(f"Unexpected error creating order: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create order.")
